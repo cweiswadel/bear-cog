@@ -52,7 +52,6 @@ async def add_rocket_to_launch(client: aiohttp.ClientSession, launch_obj, id):
         launch_obj['rocket'] = rocket_obj
     return launch_obj
 
-
 async def add_payloads_to_launch(client: aiohttp.ClientSession, launch_obj, payload_id_list):
 
     if payload_id_list != []:
@@ -77,7 +76,6 @@ async def add_payloads_to_launch(client: aiohttp.ClientSession, launch_obj, payl
         print(launch_obj['id'], " contains: NO PAYLOADS" )
     return launch_obj
 
-
 async def get_launches(client: aiohttp.ClientSession):
     async with client.get(launches_url) as response:
         # print("get_launches() status code: ", response.status)
@@ -92,11 +90,32 @@ async def get_launches(client: aiohttp.ClientSession):
         print("responseBody length", len(launches_respBody))
         return launches_respBody
 
-
+@task
 def write_json_file(output_dir, fileName, data_to_write):
     with open(f"{output_dir}{fileName}.json","w") as file:
         return file.write(json.dumps(data_to_write,indent=2))
-      
+
+async def write_to_parquet(inFile_dir, fileYear, fileName):
+    #something like write_to_parquet() to actually write the data to the correct format
+    # https://saturncloud.io/blog/how-to-write-data-to-parquet-with-python/
+    # inspiration to write to parquet: https://stackoverflow.com/questions/32940416/methods-for-writing-parquet-files-using-python
+    inFileName = inFile_dir+fileName+".json"
+    outFile_dir = await organize_records(fileYear)
+    outfileName = outFile_dir+fileName+".parquet"
+    table = paj.read_json(inFileName)
+    return pq.write_table(table, outfileName)
+
+@task
+async def organize_records(fileYear):
+    # take the file generated from create_record() 
+    # determine where it needs to go--> a directory per year
+    ##  create the directories if they do not exist
+    # add a file to the correct year and make sure the naming convetion forces the files into a sort
+    outputYr_dir = parqOutput_dir+"year="+str(fileYear)+"/"
+    Path(outputYr_dir).mkdir(parents=True, exist_ok=True)
+    return outputYr_dir
+
+@flow
 async def create_records():
     #pass in a launch object
     # build the object, calling for rocket and payload info as needed
@@ -124,34 +143,6 @@ async def create_records():
     return
 
 
-async def write_to_parquet(inFile_dir, fileYear, fileName):
-    #something like write_to_parquet() to actually write the data to the correct format
-    # https://saturncloud.io/blog/how-to-write-data-to-parquet-with-python/
-    # inspiration to write to parquet: https://stackoverflow.com/questions/32940416/methods-for-writing-parquet-files-using-python
-    inFileName = inFile_dir+fileName+".json"
-    outFile_dir = await organize_records(fileYear)
-    outfileName = outFile_dir+fileName+".parquet"
-    table = paj.read_json(inFileName)
-    return pq.write_table(table, outfileName)
-
-
-async def organize_records(fileYear):
-    # take the file generated from create_record() 
-    # determine where it needs to go--> a directory per year
-    ##  create the directories if they do not exist
-    # add a file to the correct year and make sure the naming convetion forces the files into a sort
-    outputYr_dir = parqOutput_dir+"year="+str(fileYear)+"/"
-    Path(outputYr_dir).mkdir(parents=True, exist_ok=True)
-    return outputYr_dir
-
-
-@flow(log_prints=True)
-def run_pipeline():
-    asyncio.get_event_loop().run_until_complete(create_records())
-    pass
-            
-                
-
 #pseudo code
 ##  create a async fn to get all launches from endpoint
 ##  create a secondary async fn to get the rocket info from rocket endpoint
@@ -160,11 +151,10 @@ def run_pipeline():
 ### In this 'error' file, call out which entries have what fields missing
 ##  'wrap' all of these API calls into a single write function to create the 'result' file 
 ## convert this 'result' file into the format for Parquet --> partition the entries for Parquet structure
-## Send the structured files to S3
+## Send/write the structured files to S3
 ## 'Wrap' all of this in a Prefect workflow
             
 ##overall structure inspiration: https://stackoverflow.com/questions/53199248/get-json-using-python-and-asyncio
+def main():
+    asyncio.get_event_loop().run_until_complete(create_records())
 
-if __name__ == '__main__':
-    # asyncio.get_event_loop().run_until_complete(create_records())
-    run_pipeline()
