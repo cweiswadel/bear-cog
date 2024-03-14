@@ -41,6 +41,9 @@
   * I say loose because we would still have `date_utc` (and even `date_local`) to sort and group the results by
   * BUT we wouldn't store the year as a column value in the record 
     * In my opinion, we shouldn't because that would just be more spaced used up when it already exists in another column (but it may be a parquet thing to do this)
+![S3Bucket](/MD/S3Bucket.png)
+![S3Bucket2](/MD/S3Bucket2.png)
+
 
 # Data Transformation Approach
 
@@ -86,6 +89,9 @@
       2. `aws.py`
       * There would NOT be as much granularity in the reporting of the job as anything in the same `script` execution gets lumped into one's job output
         * So in prefect world, instead of having one overall flow, with the two scripts each being a 'sub-flow' that each had their own tasks, we would only have one flow
+* I was able to play around with prefect enough to create the localhost server
+  * Within this server, I could see the tasks and flows and their various reported status(es)
+  ![PrefectServer](/MD/PrefectServer.png)
 
 
 # Lessons Learned
@@ -115,7 +121,7 @@
         * It would have made sense to develop the code in a manner where an environment variable or config file is read from as needed for the credentials/secrets
         * I would feel comfortable with doing this either via:
           * `os.environ[<VAR NAME>]` for reading an environment variable that would contain sensitive data OR 
-          
+
             ```python
             import os
             from dotenv import load_dotenv
