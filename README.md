@@ -2,7 +2,7 @@
 
 ## Goal/Objective
 
-* [Link to Assessment](https://coderbyte.com/question/software-engineer-data-engineer-assessment-h1lrnjpodk)
+* Develop an asynchronous, scalable Python-based data pipeline to extract, process, and load SpaceX launch data into an AWS database, with a focus on efficiency and organization. The pipeline will use Prefect for workflow automation and AWS services for storage and processing, with the processed data being separated into Parquet files by year before loading.
 
 ## api.py - collect data from APIs
 
