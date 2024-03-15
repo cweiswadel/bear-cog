@@ -1,5 +1,9 @@
 # Pipeline Architecture
 
+## Goal/Objective
+
+* [Link to Assessment](https://coderbyte.com/question/software-engineer-data-engineer-assessment-h1lrnjpodk)
+
 ## api.py - collect data from APIs
 
 * This `api.py` file is to extract and transform the data pulled from the SpaceX APIs
@@ -70,6 +74,15 @@
 
 # Operational Procedures
 
+## AWS Resource setup
+
+* The only manual effort to set up AWS resources were for the RDS DB
+  * This was created manually in the AWS console
+  * It was created as a MySQL RDS DB 
+    * The Database, Table, and Schema would also be created during the scripts execution if they `NOT EXISTS`
+    * (IN THEORY, because the writing of the data wasn't 100% accomplished)
+* The S3 bucket is created if it does not exist during the execution of the script/pipeline
+
 ## Lacking knowledge with Prefect
 
 * Similar to my level of familiarity with parquet files, I had never been exposed to prefect before
@@ -132,3 +145,17 @@
             ```
 
     * Based on some research it seems that AWS supports some sort of credential file that may have similar effects
+
+## Future Enhancements needed
+
+* In order to really accomplish the task/objective, there are a few things that would need to be implemented
+  * Due to time and patience constraints, they were not attempted, but realized how to achieve them
+
+### Continued Error Handling/Data Quality
+
+* In the current state, the pipeline would run to pull all launch records each time it is ran, which is not efficient in terms of processing time and storage
+  * An easy way to lean this out would be to insert another function within `api.py` > `create_records()` 
+    * This function would look against the existing values either in the DB for the id of the launch object
+      * If there is a found `launch['id']` within the DB, there would be no need to import it again
+        * (This would heavily depend on whether we would expect historical records in the `launches` endpoint to be updated after they are added new)
+      * In a perfect world, and if we owned the data, we would have a `last_modified` value that we would use in conjunction when checking ids
